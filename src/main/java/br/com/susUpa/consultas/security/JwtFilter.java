@@ -32,18 +32,22 @@ public class JwtFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            DecodedJWT decoded = jwtService.validateToken(token);
+            try {
+                String token = authHeader.substring(7);
+                DecodedJWT decoded = jwtService.validateToken(token);
 
-            String userId = decoded.getSubject();
-            String role = decoded.getClaim("role").asString();
+                String userId = decoded.getSubject();
+                String role = decoded.getClaim("role").asString();
 
-            var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-            UsernamePasswordAuthenticationToken authenticationToken =
-                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            } catch (Exception e) {
+                System.out.println("JWT Validation failed: " + e.getMessage());
+            }
         }
 
         filterChain.doFilter(request, response);
